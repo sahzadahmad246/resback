@@ -137,26 +137,22 @@ exports.updateOutletInfo = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-  try {
-    console.log("Updating admin...");
-    const admin = await Admin.findByIdAndUpdate(req.params.id, newOutletData, {
-      new: true,
-      runValidators: true,
-    });
+  const admin = await Admin.findByIdAndUpdate(req.params.id, newOutletData, {
+    new: true,
+    runValidators: true,
+  });
 
-    if (!admin) {
-      return next(new ErrorHandler("Admin not found", 404));
-    }
-
-    res.status(200).json({
-      success: true,
-      admin,
-    });
-  } catch (error) {
-    console.error("Update admin error:", error);
-    return next(new ErrorHandler("Failed to update outlet information", 500));
+  if (!admin) {
+    return next(new ErrorHandler("Admin not found", 404));
   }
+
+  res.status(200).json({
+    success: true,
+    outlet: admin,
+  });
 });
+
+
 
 
 // Get Outlet Info

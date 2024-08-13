@@ -11,10 +11,11 @@ const {
   processPayment,
   paymentVerification,
   updateOrderStatus,
+  newCODOrder
 } = require("../controllers/orderController");
 
 router.route("/order/new").post(isAuthenticatedUser, newOrder);
-
+router.route("/cod/order").post(isAuthenticatedUser, newCODOrder);
 router.route("/order/:id").get(isAuthenticatedUser, getSingleOrder);
 
 router.route("/orders/me").get(isAuthenticatedUser, myOrders);

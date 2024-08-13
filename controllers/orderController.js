@@ -46,6 +46,50 @@ exports.newOrder = [verifyToken, catchAsyncErrors(async (req, res, next) => {
   });
 })];
 
+// New function to handle COD orders
+exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
+  const {
+    deliveryInfo,
+    orderItems,
+    itemPrice,
+    deliveryPrice,
+    taxPrice,
+    totalPrice,
+  } = req.body;
+
+  console.log("Received COD order data:", req.body);
+  
+
+  try {
+   
+    const order = await Order.create({
+      deliveryInfo,
+      orderItems,
+      paymentInfo: {
+        id: null,
+        status: "Cash on delivery",
+      },
+      itemPrice,
+      deliveryPrice,
+      taxPrice,
+      totalPrice,
+      paidAt: null,
+      user: req.user._id,
+    });
+
+    console.log("COD Order created successfully:", order);
+
+    res.status(201).json({
+      success: true,
+      message: "COD Order placed successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Error creating COD order:", error);
+    return next(new ErrorHandler("COD order creation failed", 500));
+  }
+});
+
 
 // get Single order
 exports.getSingleOrder = catchAsyncErrors(async (req, res, next) => {

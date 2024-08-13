@@ -69,18 +69,24 @@ const orderSchema = new mongoose.Schema({
   paymentInfo: {
     id: {
       type: String,
-      required: true,
+      required: function () {
+        return this.paymentInfo.status !== "Cash on delivery";
+      },
     },
     status: {
       type: String,
-      enum: ["paid", "pending", "failed"],
+      enum: ["paid", "pending", "failed", "Cash on delivery"],
       required: true,
     },
   },
   paidAt: {
     type: Date,
-    required: true,
+    required: function () {
+      return this.paymentInfo.status !== "Cash on delivery";
+    },
   },
+
+
   itemPrice: {
     type: Number,
     default: 0,
