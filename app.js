@@ -19,11 +19,7 @@ app.use(
 );
 
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://sonipaintingworks.onrender.com",
-    "https://sonipainting.com",
-  ],
+  origin: ["http://localhost:5173", "https://resfront.onrender.com"],
   methods: ["GET", "POST", "PUT", "DELETE", "HEAD", "FETCH"],
   credentials: true,
 };
@@ -41,7 +37,7 @@ app.get("/api/v1/getkey", (req, res) => {
 const product = require("./routes/productRoute");
 const user = require("./routes/userRoute");
 const order = require("./routes/orderRoute");
-const adminRoutes = require("./routes/adminRoute")
+const adminRoutes = require("./routes/adminRoute");
 
 app.use("/api/v1", product);
 app.use("/api/v1", user);
@@ -52,7 +48,5 @@ app.use("/api/v1", adminRoutes);
 app.use(errorMiddleware);
 app.use(isAuthenticatedUser);
 app.use(authorizeRoles);
-
-
 
 module.exports = app;
