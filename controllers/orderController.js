@@ -260,9 +260,9 @@ exports.paymentVerification = catchAsyncErrors(async (req, res, next) => {
       { expiresIn: "12m" }
     );
     return res.redirect(
-      `http://localhost:5173/success?reference=${razorpay_payment_id}&status=success&token=${token}`
+      `https://resfront.onrender.com/success?reference=${razorpay_payment_id}&status=success&token=${token}`
     );
   } else {
-    return res.redirect(`http://localhost:5173/paymentfailure?status=failure`);
+    return res.redirect(`https://resfront.onrender.com/paymentfailure?status=failure`);
   }
 });
