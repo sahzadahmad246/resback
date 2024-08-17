@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -7,6 +8,7 @@ const fileUpload = require("express-fileupload");
 const errorMiddleware = require("./middleware/error");
 const { authorizeRoles, isAuthenticatedUser } = require("./middleware/auth");
 
+// Middleware setup
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -26,14 +28,16 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Route to get Razorpay key
+// Serve static files from the `dist` folder
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// API routes
 app.get("/api/v1/getkey", (req, res) => {
   res.status(200).json({
     key: process.env.RAZORPAY_KEY_ID,
   });
 });
 
-// importing routes
 const product = require("./routes/productRoute");
 const user = require("./routes/userRoute");
 const order = require("./routes/orderRoute");
@@ -44,7 +48,12 @@ app.use("/api/v1", user);
 app.use("/api/v1", order);
 app.use("/api/v1", adminRoutes);
 
-// middleware to handle error
+// Handle client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+// Middleware to handle error
 app.use(errorMiddleware);
 app.use(isAuthenticatedUser);
 app.use(authorizeRoles);
