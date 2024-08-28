@@ -49,10 +49,10 @@ app.use("/api/v1", order);
 app.use("/api/v1", adminRoutes);
 app.use("/api/v1", coupon);
 
-// Handle client-side routing
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
-});
+// // Handle client-side routing
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "dist", "index.html"));
+// });
 
 // Middleware to handle error
 app.use(errorMiddleware);
