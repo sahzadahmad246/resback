@@ -29,7 +29,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Serve static files from the `dist` folder
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, "dist")));
 
 // API routes
 app.get("/api/v1/getkey", (req, res) => {
@@ -42,15 +42,16 @@ const product = require("./routes/productRoute");
 const user = require("./routes/userRoute");
 const order = require("./routes/orderRoute");
 const adminRoutes = require("./routes/adminRoute");
-
+const coupon = require("./routes/couponRoute");
 app.use("/api/v1", product);
 app.use("/api/v1", user);
 app.use("/api/v1", order);
 app.use("/api/v1", adminRoutes);
+app.use("/api/v1", coupon);
 
 // Handle client-side routing
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
 // Middleware to handle error
