@@ -4,13 +4,6 @@ const Coupon = require("../models/couponModel");
 exports.createCoupon = async (req, res) => {
   const { code, discountType, discountValue, expiryDate } = req.body;
 
-  console.log("Received request to create coupon with data:", {
-    code,
-    discountType,
-    discountValue,
-    expiryDate,
-  });
-
   try {
     const newCoupon = new Coupon({
       code,
@@ -19,13 +12,12 @@ exports.createCoupon = async (req, res) => {
       expiryDate,
     });
 
-    console.log("Saving new coupon to the database:", newCoupon);
     await newCoupon.save();
 
-    console.log("Coupon created successfully:", newCoupon);
-    res.status(201).json({ message: "Coupon created successfully", coupon: newCoupon });
+    res
+      .status(201)
+      .json({ message: "Coupon created successfully", coupon: newCoupon });
   } catch (error) {
-    console.error("Error creating coupon:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -67,10 +59,12 @@ exports.redeemCoupon = async (req, res) => {
 
     // Update coupon to mark it as used
     coupon.used = true;
-    coupon.usedAt = new Date(); 
+    coupon.usedAt = new Date();
     await coupon.save();
 
-    res.status(200).json({ message: "Coupon applied successfully", discount, total });
+    res
+      .status(200)
+      .json({ message: "Coupon applied successfully", discount, total });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -81,6 +75,45 @@ exports.getAllCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.find();
     res.status(200).json(coupons);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Delete Coupon
+exports.deleteCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const coupon = await Coupon.findById(id);
+
+    if (!coupon) {
+      return res.status(404).json({ message: "Coupon not found" });
+    }
+
+    await coupon.remove();
+    res.status(200).json({ message: "Coupon deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Manually Expire a Coupon
+exports.expireCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const coupon = await Coupon.findById(id);
+
+    if (!coupon) {
+      return res.status(404).json({ message: "Coupon not found" });
+    }
+
+    // Mark the coupon as expired
+    coupon.isActive = false;
+    await coupon.save();
+
+    res.status(200).json({ message: "Coupon marked as expired successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
