@@ -5,8 +5,7 @@ const couponSchema = new mongoose.Schema({
   discountType: { type: String, enum: ["percent", "amount"], required: true },
   discountValue: { type: Number, required: true },
   expiryDate: { type: Date, required: true },
-  isActive: { type: Boolean, default: true },
-  used: { type: Boolean, default: false },
+  status: { type: String, enum: ["active", "inactive"], default: "active" },
   usedAt: { type: Date, default: null }  
 });
 

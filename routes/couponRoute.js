@@ -9,14 +9,18 @@ const {
   expireCoupon,
 } = require("../controllers/couponController");
 
-// Route to create a new coupon (Only authenticated users)
-router.route("/create/coupon").post(isAuthenticatedUser, createCoupon);
+// Route to create a new coupon (Only for admins )
+router
+  .route("/create/coupon")
+  .post(isAuthenticatedUser, authorizeRoles("admin"), createCoupon);
 
 // Route to redeem a coupon (Only authenticated users)
 router.route("/redeem-coupon").post(isAuthenticatedUser, redeemCoupon);
 
-// Route to get all coupons (Only authenticated users)
-router.route("/get-all-coupons").get(isAuthenticatedUser, getAllCoupons);
+// Route to get all coupons (Only for admins)
+router
+  .route("/get-all-coupons")
+  .get(isAuthenticatedUser, authorizeRoles("admin"), getAllCoupons);
 
 // Route to delete a coupon by ID (Only admins can delete)
 router

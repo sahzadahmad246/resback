@@ -1,4 +1,5 @@
 const Coupon = require("../models/couponModel");
+const mongoose = require('mongoose');
 
 // Create Coupon
 exports.createCoupon = async (req, res) => {
@@ -14,9 +15,7 @@ exports.createCoupon = async (req, res) => {
 
     await newCoupon.save();
 
-    res
-      .status(201)
-      .json({ message: "Coupon created successfully", coupon: newCoupon });
+    res.status(201).json({ message: "Coupon created successfully", coupon: newCoupon });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -35,16 +34,16 @@ exports.redeemCoupon = async (req, res) => {
 
     // Deactivate coupon if expired
     if (new Date() > coupon.expiryDate) {
-      coupon.isActive = false;
+      coupon.status = "inactive";
       await coupon.save();
       return res.status(400).json({ message: "Coupon has expired" });
     }
 
-    if (!coupon.isActive) {
+    if (coupon.status !== "active") {
       return res.status(400).json({ message: "Coupon is not active" });
     }
 
-    if (coupon.used) {
+    if (coupon.usedAt) {
       return res.status(400).json({ message: "Coupon has already been used" });
     }
 
@@ -58,13 +57,11 @@ exports.redeemCoupon = async (req, res) => {
     const total = subtotal - discount;
 
     // Update coupon to mark it as used
-    coupon.used = true;
     coupon.usedAt = new Date();
+    coupon.status = "inactive"; // Mark as inactive after use
     await coupon.save();
 
-    res
-      .status(200)
-      .json({ message: "Coupon applied successfully", discount, total });
+    res.status(200).json({ message: "Coupon applied successfully", discount, total });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -85,15 +82,30 @@ exports.deleteCoupon = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Log the ID received in the request
+    console.log("Coupon ID to delete:", id);
+
+    // Check if the ID is valid
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid coupon ID" });
+    }
+
     const coupon = await Coupon.findById(id);
 
+    // Log if coupon was not found
     if (!coupon) {
+      console.log("Coupon not found");
       return res.status(404).json({ message: "Coupon not found" });
     }
 
-    await coupon.remove();
+    // Use findByIdAndDelete instead of remove
+    await Coupon.findByIdAndDelete(id);
+    console.log("Coupon deleted successfully");
+
     res.status(200).json({ message: "Coupon deleted successfully" });
   } catch (error) {
+    // Log the error
+    console.log("Error in deleteCoupon:", error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -103,18 +115,31 @@ exports.expireCoupon = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Log the ID received in the request
+    console.log("Coupon ID to expire:", id);
+
+    // Check if the ID is valid
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid coupon ID" });
+    }
+
     const coupon = await Coupon.findById(id);
 
+    // Log if coupon was not found
     if (!coupon) {
+      console.log("Coupon not found");
       return res.status(404).json({ message: "Coupon not found" });
     }
 
-    // Mark the coupon as expired
-    coupon.isActive = false;
+    // Mark the coupon as inactive (expired)
+    coupon.status = "inactive";
     await coupon.save();
 
+    console.log("Coupon marked as expired successfully");
     res.status(200).json({ message: "Coupon marked as expired successfully" });
   } catch (error) {
+    // Log the error
+    console.log("Error in expireCoupon:", error.message);
     res.status(500).json({ error: error.message });
   }
 };
