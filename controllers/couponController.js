@@ -24,6 +24,7 @@ exports.createCoupon = async (req, res) => {
 // Redeem Coupon
 exports.redeemCoupon = async (req, res) => {
   const { couponCode, subtotal } = req.body;
+  console.log(req.body); // To check if couponCode and subtotal are correctly passed
 
   try {
     const coupon = await Coupon.findOne({ code: couponCode });
@@ -64,6 +65,7 @@ exports.redeemCoupon = async (req, res) => {
     res.status(200).json({ message: "Coupon applied successfully", discount, total });
   } catch (error) {
     res.status(500).json({ error: error.message });
+    console.log('Error details:', error.stack); 
   }
 };
 
