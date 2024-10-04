@@ -1,6 +1,8 @@
 const dotenv = require("dotenv");
-const app = require("./app");
+const http = require("http"); // Import http
+const app = require("./app"); // Import app, no io needed here
 const cloudinary = require("cloudinary");
+const { Server } = require("socket.io"); // Import socket.io
 
 // Load environment variables
 dotenv.config({ path: "backend/config/config.env" });
@@ -15,10 +17,33 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-// Connect to database and start the server
+// Connect to the database
 connectDB()
   .then(() => {
-    app.listen(process.env.PORT, () => {
+    // Create an HTTP server and attach Socket.IO
+    const server = http.createServer(app); // Create the server here
+    const io = new Server(server, {
+      cors: {
+        origin: ["http://localhost:5173", "https://resfront.onrender.com"],
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
+    });
+
+    // Socket.IO connection
+    io.on("connection", (socket) => {
+      console.log("New client connected");
+
+      // Handle disconnection
+      socket.on("disconnect", () => {
+        console.log("Client disconnected");
+      });
+
+      // Add other socket event handlers here
+    });
+
+    // Start the server
+    server.listen(process.env.PORT, () => {
       console.log(`Server is running on http://localhost:${process.env.PORT}`);
     });
   })
