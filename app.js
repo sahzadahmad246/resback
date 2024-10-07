@@ -20,6 +20,12 @@ app.use(
   })
 );
 
+app.use(
+  cors({
+    origin: ["https://resfront.onrender.com", "http://localhost:5173"],
+    credentials: true,
+  })
+);
 // API routes
 app.get("/api/v1/getkey", (req, res) => {
   res.status(200).json({
