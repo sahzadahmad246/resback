@@ -173,40 +173,38 @@ exports.deleteOrder = catchAsyncErrors(async (req, res, next) => {
 });
 
 // Update order status and track history
-exports.updateOrderStatus = (io) =>
-  catchAsyncErrors(async (req, res, next) => {
-    const { id } = req.params;
-    const { status } = req.body;
+exports.updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
+  const { id } = req.params;
+  const { status } = req.body;
 
-    const order = await Order.findById(id);
+  const order = await Order.findById(id);
 
-    if (!order) {
-      return next(new ErrorHandler("Order not found", 404));
-    }
+  if (!order) {
+    return next(new ErrorHandler("Order not found", 404));
+  }
 
-    if (order.orderStatus === "Delivered") {
-      return next(
-        new ErrorHandler("This order has already been delivered", 400)
-      );
-    }
+  if (order.orderStatus === "Delivered") {
+    return next(new ErrorHandler("This order has already been delivered", 400));
+  }
 
-    // Update status history
-    order.statusHistory.push({ status, timestamp: Date.now() });
-    order.orderStatus = status;
+  // Update status history
+  order.statusHistory.push({ status, timestamp: Date.now() });
+  order.orderStatus = status;
 
-    if (status === "Delivered") {
-      order.deliveredAt = Date.now();
-    }
+  if (status === "Delivered") {
+    order.deliveredAt = Date.now();
+  }
 
-    await order.save({ validateBeforeSave: false });
+  await order.save({ validateBeforeSave: false });
 
-    io.emit("orderStatusUpdated", order);
+  // Emit the updated order status to all connected clients
+  req.app.get("io").emit("orderStatusUpdated", order);
 
-    res.status(200).json({
-      success: true,
-      order,
-    });
+  res.status(200).json({
+    success: true,
+    order,
   });
+});
 
 //process payment
 exports.processPayment = catchAsyncErrors(async (req, res, next) => {
