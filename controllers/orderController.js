@@ -4,48 +4,48 @@ const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const razorpayInstance = require("../Razorpay/razorpayInstance");
 const crypto = require("crypto");
-const jwt = require('jsonwebtoken');
-const verifyToken = require('../middleware/verifyToken');
+const jwt = require("jsonwebtoken");
+const verifyToken = require("../middleware/verifyToken");
 
 // creating new order
 
+exports.newOrder = [
+  verifyToken,
+  catchAsyncErrors(async (req, res, next) => {
+    const {
+      deliveryInfo,
+      orderItems,
+      paymentInfo,
+      itemPrice,
+      deliveryPrice,
+      taxPrice,
+      totalPrice,
+    } = req.body;
 
+    // Ensure paymentInfo contains the paymentId from the token
+    if (req.decoded.paymentId !== paymentInfo.id) {
+      return next(new ErrorHandler("Invalid payment ID", 400));
+    }
 
+    const order = await Order.create({
+      deliveryInfo,
+      orderItems,
+      paymentInfo,
+      itemPrice,
+      deliveryPrice,
+      taxPrice,
+      totalPrice,
+      paidAt: Date.now(),
+      user: req.user._id,
+    });
 
-exports.newOrder = [verifyToken, catchAsyncErrors(async (req, res, next) => {
-  const {
-    deliveryInfo,
-    orderItems,
-    paymentInfo,
-    itemPrice,
-    deliveryPrice,
-    taxPrice,
-    totalPrice,
-  } = req.body;
-
-  // Ensure paymentInfo contains the paymentId from the token
-  if (req.decoded.paymentId !== paymentInfo.id) {
-    return next(new ErrorHandler("Invalid payment ID", 400));
-  }
-
-  const order = await Order.create({
-    deliveryInfo,
-    orderItems,
-    paymentInfo,
-    itemPrice,
-    deliveryPrice,
-    taxPrice,
-    totalPrice,
-    paidAt: Date.now(),
-    user: req.user._id,
-  });
-
-  res.status(201).json({
-    success: true,
-    message: "Order placed successfully",
-    order,
-  });
-})];
+    res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      order,
+    });
+  }),
+];
 
 // New function to handle COD orders
 exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
@@ -59,10 +59,8 @@ exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
   } = req.body;
 
   console.log("Received COD order data:", req.body);
-  
 
   try {
-   
     const order = await Order.create({
       deliveryInfo,
       orderItems,
@@ -90,7 +88,6 @@ exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("COD order creation failed", 500));
   }
 });
-
 
 // get Single order
 exports.getSingleOrder = catchAsyncErrors(async (req, res, next) => {
@@ -162,8 +159,6 @@ exports.updateOrder = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-
-
 // delete order --admin
 exports.deleteOrder = catchAsyncErrors(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
@@ -178,37 +173,40 @@ exports.deleteOrder = catchAsyncErrors(async (req, res, next) => {
 });
 
 // Update order status and track history
-exports.updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
-  const { id } = req.params;
-  const { status } = req.body;
+exports.updateOrderStatus = (io) =>
+  catchAsyncErrors(async (req, res, next) => {
+    const { id } = req.params;
+    const { status } = req.body;
 
-  const order = await Order.findById(id);
+    const order = await Order.findById(id);
 
-  if (!order) {
-    return next(new ErrorHandler("Order not found", 404));
-  }
+    if (!order) {
+      return next(new ErrorHandler("Order not found", 404));
+    }
 
-  if (order.orderStatus === "Delivered") {
-    return next(new ErrorHandler("This order has already been delivered", 400));
-  }
+    if (order.orderStatus === "Delivered") {
+      return next(
+        new ErrorHandler("This order has already been delivered", 400)
+      );
+    }
 
-  // Update status history
-  order.statusHistory.push({ status, timestamp: Date.now() });
-  order.orderStatus = status;
+    // Update status history
+    order.statusHistory.push({ status, timestamp: Date.now() });
+    order.orderStatus = status;
 
-  if (status === "Delivered") {
-    order.deliveredAt = Date.now();
-  }
+    if (status === "Delivered") {
+      order.deliveredAt = Date.now();
+    }
 
-  await order.save({ validateBeforeSave: false });
+    await order.save({ validateBeforeSave: false });
 
-  res.status(200).json({
-    success: true,
-    order,
+    io.emit("orderStatusUpdated", order);
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
   });
-});
-
-
 
 //process payment
 exports.processPayment = catchAsyncErrors(async (req, res, next) => {
@@ -264,6 +262,8 @@ exports.paymentVerification = catchAsyncErrors(async (req, res, next) => {
       `https://resfront.onrender.com/success?reference=${razorpay_payment_id}&status=success&token=${token}`
     );
   } else {
-    return res.redirect(`https://resfront.onrender.com/paymentfailure?status=failure`);
+    return res.redirect(
+      `https://resfront.onrender.com/paymentfailure?status=failure`
+    );
   }
 });
