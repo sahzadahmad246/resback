@@ -4,7 +4,7 @@ const { addOutletInfo, updateOutletInfo, getOutletInfo } = require("../controlle
 const { isAuthenticatedUser, authorizeRoles } = require("../middleware/auth");
 
 // Route to get outlet information
-router.get("/admin/outlet-info", isAuthenticatedUser, getOutletInfo);
+router.get("/admin/outlet-info", getOutletInfo);
 
 // Route to add outlet information
 router.post("/admin/outlet-info", isAuthenticatedUser, authorizeRoles("admin"), addOutletInfo);
