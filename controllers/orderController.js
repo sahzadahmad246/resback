@@ -183,16 +183,12 @@ exports.updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
   const { status } = req.body;
 
   const order = await Order.findById(id);
-
-  if (!order) {
-    return next(new ErrorHandler("Order not found", 404));
-  }
+  if (!order) return next(new ErrorHandler("Order not found", 404));
 
   if (order.orderStatus === "Delivered") {
     return next(new ErrorHandler("This order has already been delivered", 400));
   }
 
-  // Update status history
   order.statusHistory.push({ status, timestamp: Date.now() });
   order.orderStatus = status;
 
@@ -201,6 +197,9 @@ exports.updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
   }
 
   await order.save({ validateBeforeSave: false });
+
+  // Emit the updated order data using Socket.IO
+  req.io.emit("orderStatusUpdate", { orderId: order._id, status: order.orderStatus });
 
   res.status(200).json({
     success: true,

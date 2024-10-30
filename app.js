@@ -44,6 +44,10 @@ app.use("/api/v1", user);
 app.use("/api/v1", order);
 app.use("/api/v1", adminRoutes);
 app.use("/api/v1", coupon);
+app.use((req, res, next) => {
+  req.io = io; // Attach io instance to req
+  next();
+});
 
 // Serve static files from the `dist` folder
 app.use(express.static(path.join(__dirname, "dist")));
