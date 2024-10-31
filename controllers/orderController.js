@@ -4,48 +4,50 @@ const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const razorpayInstance = require("../Razorpay/razorpayInstance");
 const crypto = require("crypto");
-const jwt = require('jsonwebtoken');
-const verifyToken = require('../middleware/verifyToken');
+const jwt = require("jsonwebtoken");
+const verifyToken = require("../middleware/verifyToken");
 
 // creating new order
 
+exports.newOrder = [
+  verifyToken,
+  catchAsyncErrors(async (req, res, next) => {
+    const {
+      deliveryInfo,
+      orderItems,
+      paymentInfo,
+      itemPrice,
+      deliveryPrice,
+      taxPrice,
+      totalPrice,
+      discount,
+    } = req.body;
 
+    // Ensure paymentInfo contains the paymentId from the token
+    if (req.decoded.paymentId !== paymentInfo.id) {
+      return next(new ErrorHandler("Invalid payment ID", 400));
+    }
 
+    const order = await Order.create({
+      deliveryInfo,
+      orderItems,
+      paymentInfo,
+      itemPrice,
+      deliveryPrice,
+      taxPrice,
+      totalPrice,
+      discount,
+      paidAt: Date.now(),
+      user: req.user._id,
+    });
 
-exports.newOrder = [verifyToken, catchAsyncErrors(async (req, res, next) => {
-  const {
-    deliveryInfo,
-    orderItems,
-    paymentInfo,
-    itemPrice,
-    deliveryPrice,
-    taxPrice,
-    totalPrice,
-  } = req.body;
-
-  // Ensure paymentInfo contains the paymentId from the token
-  if (req.decoded.paymentId !== paymentInfo.id) {
-    return next(new ErrorHandler("Invalid payment ID", 400));
-  }
-
-  const order = await Order.create({
-    deliveryInfo,
-    orderItems,
-    paymentInfo,
-    itemPrice,
-    deliveryPrice,
-    taxPrice,
-    totalPrice,
-    paidAt: Date.now(),
-    user: req.user._id,
-  });
-
-  res.status(201).json({
-    success: true,
-    message: "Order placed successfully",
-    order,
-  });
-})];
+    res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      order,
+    });
+  }),
+];
 
 // New function to handle COD orders
 exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
@@ -56,13 +58,12 @@ exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
     deliveryPrice,
     taxPrice,
     totalPrice,
+    discount,
   } = req.body;
 
   console.log("Received COD order data:", req.body);
-  
 
   try {
-   
     const order = await Order.create({
       deliveryInfo,
       orderItems,
@@ -74,6 +75,7 @@ exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
       deliveryPrice,
       taxPrice,
       totalPrice,
+      discount,
       paidAt: null,
       user: req.user._id,
     });
@@ -90,7 +92,6 @@ exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("COD order creation failed", 500));
   }
 });
-
 
 // get Single order
 exports.getSingleOrder = catchAsyncErrors(async (req, res, next) => {
@@ -162,8 +163,6 @@ exports.updateOrder = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-
-
 // delete order --admin
 exports.deleteOrder = catchAsyncErrors(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
@@ -199,15 +198,16 @@ exports.updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
   await order.save({ validateBeforeSave: false });
 
   // Emit the updated order data using Socket.IO
-  req.io.emit("orderStatusUpdate", { orderId: order._id, status: order.orderStatus });
+  req.io.emit("orderStatusUpdate", {
+    orderId: order._id,
+    status: order.orderStatus,
+  });
 
   res.status(200).json({
     success: true,
     order,
   });
 });
-
-
 
 //process payment
 exports.processPayment = catchAsyncErrors(async (req, res, next) => {
@@ -263,6 +263,8 @@ exports.paymentVerification = catchAsyncErrors(async (req, res, next) => {
       `https://resfront.onrender.com/success?reference=${razorpay_payment_id}&status=success&token=${token}`
     );
   } else {
-    return res.redirect(`https://resfront.onrender.com/paymentfailure?status=failure`);
+    return res.redirect(
+      `https://resfront.onrender.com/paymentfailure?status=failure`
+    );
   }
 });
