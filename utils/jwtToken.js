@@ -7,7 +7,6 @@ const sendToken = (user, statusCode, res) => {
     ),
     httpOnly: true,
     secure: true,
-    domain: "https://resback-ql89.onrender.com",
     sameSite: "none",
   };
 
