@@ -197,12 +197,7 @@ exports.updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
 
   await order.save({ validateBeforeSave: false });
 
-  // Emit the updated order data using Socket.IO
-  req.io.emit("orderStatusUpdate", {
-    orderId: order._id,
-    status: order.orderStatus,
-  });
-
+  
   res.status(200).json({
     success: true,
     order,
