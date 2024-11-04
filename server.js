@@ -3,7 +3,7 @@ const http = require("http"); // Import http
 const app = require("./app"); // Import app, no io needed here
 const cloudinary = require("cloudinary");
 const { Server } = require("socket.io"); // Import socket.io
-const Order = require("../models/orderModels");
+const Order = require("./models/orderModels");
 // Load environment variables
 dotenv.config({ path: "backend/config/config.env" });
 const connectDB = require("./mongoDB/database");
