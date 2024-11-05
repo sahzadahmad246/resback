@@ -21,6 +21,7 @@ exports.newOrder = [
       taxPrice,
       totalPrice,
       discount,
+      instruction,
     } = req.body;
 
     // Ensure paymentInfo contains the paymentId from the token
@@ -37,6 +38,7 @@ exports.newOrder = [
       taxPrice,
       totalPrice,
       discount,
+      instruction,
       paidAt: Date.now(),
       user: req.user._id,
     });
@@ -59,9 +61,8 @@ exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
     taxPrice,
     totalPrice,
     discount,
+    instruction,
   } = req.body;
-
-  console.log("Received COD order data:", req.body);
 
   try {
     const order = await Order.create({
@@ -76,11 +77,10 @@ exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
       taxPrice,
       totalPrice,
       discount,
+      instruction,
       paidAt: null,
       user: req.user._id,
     });
-
-    console.log("COD Order created successfully:", order);
 
     res.status(201).json({
       success: true,
@@ -88,7 +88,6 @@ exports.newCODOrder = catchAsyncErrors(async (req, res, next) => {
       order,
     });
   } catch (error) {
-    console.error("Error creating COD order:", error);
     return next(new ErrorHandler("COD order creation failed", 500));
   }
 });
@@ -197,7 +196,6 @@ exports.updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
 
   await order.save({ validateBeforeSave: false });
 
-  
   res.status(200).json({
     success: true,
     order,
@@ -228,7 +226,6 @@ exports.processPayment = catchAsyncErrors(async (req, res, next) => {
       order,
     });
   } catch (error) {
-    console.error("Error creating order:", error);
     return res
       .status(500)
       .json({ error: "Order creation failed", details: error.message });

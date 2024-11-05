@@ -86,7 +86,6 @@ const orderSchema = new mongoose.Schema({
     },
   },
 
-
   itemPrice: {
     type: Number,
     default: 0,
@@ -135,6 +134,10 @@ const orderSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  instruction: {
+    type: String,
+    required: false,
   },
 });
 
