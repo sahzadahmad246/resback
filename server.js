@@ -17,6 +17,12 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
+// Custom headers for all responses (optional, if needed for more control)
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "https://resfront.onrender.com");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
 const server = http.createServer(app);
 
 // Connect to database and start server
